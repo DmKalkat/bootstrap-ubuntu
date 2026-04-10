@@ -1,9 +1,24 @@
 # bootstrap-ubuntu
-## ussage for new_ubuntu_ssh.sh - this will add key to cur user
+
+Shortest reliable command on a new Ubuntu machine:
+
 ```bash
-sudo apt install curl && curl -s https://raw.githubusercontent.com/DmKalkat/bootstrap-ubuntu/main/new_ubuntu_ssh.sh | bash
+sudo apt-get update && sudo apt-get install -y curl && curl -fsSL https://raw.githubusercontent.com/DmKalkat/bootstrap-ubuntu/main/u.sh | bash
 ```
-### from my locat connect to 
+
+This will:
+- install `curl`
+- download and run the SSH bootstrap script
+- add GitHub SSH keys for the current user
+
+If you want a different GitHub account:
+
 ```bash
-ssh -i $env:USERPROFILE\.ssh\DK_pub [user]@192.168.1[ip]
+curl -fsSL https://raw.githubusercontent.com/DmKalkat/bootstrap-ubuntu/main/new_ubuntu_ssh.sh | GITHUB_USER=your-github bash
+```
+
+Connect from your Windows machine:
+
+```bash
+ssh -i $env:USERPROFILE\.ssh\DK_pub [user]@[ip]
 ```
