@@ -1,5 +1,10 @@
 # bootstrap-ubuntu
 
+Small bootstrap scripts for a fresh Ubuntu machine.
+
+This repository is meant for the first manual setup step on a new host when you only have a keyboard and want SSH access as quickly as possible.
+The main script installs OpenSSH server and `curl`, enables the SSH service, imports public keys from a GitHub account into the current user's `authorized_keys`, and applies basic SSH hardening by disabling password authentication and restricting direct root login.
+
 Shortest reliable command on a new Ubuntu machine:
 
 ```bash
