@@ -8,6 +8,11 @@ AUTHORIZED_KEYS_FILE="$HOME/.ssh/authorized_keys"
 APT_LOCK_WAIT_SECONDS="${APT_LOCK_WAIT_SECONDS:-120}"
 APT_RETRY_COUNT="${APT_RETRY_COUNT:-5}"
 APT_RETRY_DELAY_SECONDS="${APT_RETRY_DELAY_SECONDS:-5}"
+APT_ENV=(DEBIAN_FRONTEND=noninteractive)
+APT_DPKG_OPTIONS=(
+  -o Dpkg::Options::=--force-confdef
+  -o Dpkg::Options::=--force-confold
+)
 
 log() {
   printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
@@ -38,8 +43,8 @@ wait_for_apt_locks() {
 
 repair_apt_state() {
   log "Checking dpkg/apt state..."
-  sudo dpkg --configure -a || true
-  sudo apt-get -f install -y || true
+  sudo "${APT_ENV[@]}" dpkg --configure -a || true
+  sudo "${APT_ENV[@]}" apt-get "${APT_DPKG_OPTIONS[@]}" -f install -y || true
 }
 
 run_with_retry() {
@@ -70,8 +75,8 @@ wait_for_apt_locks
 repair_apt_state
 
 log "Installing OpenSSH server and curl..."
-run_with_retry sudo apt-get update
-run_with_retry sudo apt-get install -y openssh-server curl
+run_with_retry sudo "${APT_ENV[@]}" apt-get update
+run_with_retry sudo "${APT_ENV[@]}" apt-get "${APT_DPKG_OPTIONS[@]}" install -y openssh-server curl
 
 log "Enabling SSH..."
 sudo systemctl enable --now ssh

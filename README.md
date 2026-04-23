@@ -4,7 +4,7 @@ Small bootstrap scripts for a fresh Ubuntu machine.
 
 This repository is meant for the first manual setup step on a new host when you only have a keyboard and want SSH access as quickly as possible.
 The main script installs OpenSSH server and `curl`, enables the SSH service, imports public keys from a GitHub account into the current user's `authorized_keys`, and applies basic SSH hardening by disabling password authentication and restricting direct root login.
-The bootstrap also tries to recover a broken `dpkg/apt` state before installing packages and waits for package manager locks to clear.
+The bootstrap also tries to recover a broken `dpkg/apt` state before installing packages, waits for package manager locks to clear, and keeps the local SSH config when package upgrades would normally ask interactively.
 
 Shortest reliable command on a new Ubuntu machine:
 
@@ -18,6 +18,7 @@ This will:
 - add GitHub SSH keys for the current user
 - recover interrupted `dpkg/apt` state when possible
 - wait for package manager locks and retry apt operations
+- avoid interactive `sshd_config` prompts by preserving the local config
 
 If you want a different GitHub account:
 
@@ -37,7 +38,7 @@ If the bootstrap fails around `apt` or `dpkg`, the script itself may be fine and
 
 ```bash
 sudo dpkg --configure -a
-sudo apt-get -f install -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold -f install -y
 ```
 
 After the package manager state is restored, rerun the bootstrap.
