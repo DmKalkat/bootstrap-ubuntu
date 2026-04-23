@@ -16,6 +16,7 @@ WG_DNS="${WG_DNS:-1.1.1.1, 1.0.0.1}"
 WG_SERVER_PUBLIC_KEY="${WG_SERVER_PUBLIC_KEY:-uFgQoQsx0K/Vw57BkT1llr1DbURwVJZSqVDzjT3cijo=}"
 WG_ALLOWED_IPS="${WG_ALLOWED_IPS:-10.216.0.0/24}"
 WG_ENDPOINT="${WG_ENDPOINT:-45.32.154.75:51820}"
+WG_PERSISTENT_KEEPALIVE="${WG_PERSISTENT_KEEPALIVE:-25}"
 APT_INSTALL_OPTIONS=(
   -o Dpkg::Options::=--force-confdef
   -o Dpkg::Options::=--force-confold
@@ -79,6 +80,7 @@ DNS = ${WG_DNS}
 PublicKey = ${WG_SERVER_PUBLIC_KEY}
 AllowedIPs = ${WG_ALLOWED_IPS}
 Endpoint = ${WG_ENDPOINT}
+PersistentKeepalive = ${WG_PERSISTENT_KEEPALIVE}
 EOF
 
   sudo chmod 600 "$WG_CONFIG_PATH"

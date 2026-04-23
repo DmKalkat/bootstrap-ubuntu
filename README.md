@@ -31,6 +31,7 @@ This will:
 - write `/etc/wireguard/wg0.conf`
 - enable `wg-quick@wg0`
 - show the client `PublicKey` for adding to your cloud WireGuard server
+- keep the tunnel alive behind NAT with `PersistentKeepalive = 25`
 
 Test target:
 - Ubuntu Server 24.04 LTS
@@ -118,6 +119,7 @@ Defaults in this join script:
 - `WG_SERVER_PUBLIC_KEY=uFgQoQsx0K/Vw57BkT1llr1DbURwVJZSqVDzjT3cijo=`
 - `WG_ALLOWED_IPS=10.216.0.0/24`
 - `WG_ENDPOINT=45.32.154.75:51820`
+- `WG_PERSISTENT_KEEPALIVE=25`
 
 You can still pass the full address if needed:
 
