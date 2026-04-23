@@ -5,15 +5,83 @@ GITHUB_USER="${GITHUB_USER:-DmKalkat}"
 SSHD_DROPIN_DIR="/etc/ssh/sshd_config.d"
 SSH_HARDENING_FILE="$SSHD_DROPIN_DIR/99-bootstrap-hardening.conf"
 AUTHORIZED_KEYS_FILE="$HOME/.ssh/authorized_keys"
+APT_LOCK_WAIT_SECONDS="${APT_LOCK_WAIT_SECONDS:-120}"
+APT_RETRY_COUNT="${APT_RETRY_COUNT:-5}"
+APT_RETRY_DELAY_SECONDS="${APT_RETRY_DELAY_SECONDS:-5}"
+APT_ENV=(DEBIAN_FRONTEND=noninteractive)
+APT_DPKG_OPTIONS=(
+  -o Dpkg::Options::=--force-confdef
+  -o Dpkg::Options::=--force-confold
+)
 
-echo "Installing OpenSSH server and curl..."
-sudo apt-get update
-sudo apt-get install -y openssh-server curl
+log() {
+  printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
+}
 
-echo "Enabling SSH..."
+wait_for_apt_lock() {
+  local lock_file="$1"
+  local waited=0
+
+  while ! sudo flock -n "$lock_file" true 2>/dev/null; do
+    if (( waited >= APT_LOCK_WAIT_SECONDS )); then
+      log "Timed out waiting for apt lock: $lock_file"
+      return 1
+    fi
+
+    log "Waiting for apt lock: $lock_file"
+    sleep 3
+    waited=$((waited + 3))
+  done
+}
+
+wait_for_apt_locks() {
+  wait_for_apt_lock /var/lib/dpkg/lock-frontend
+  wait_for_apt_lock /var/lib/dpkg/lock
+  wait_for_apt_lock /var/cache/apt/archives/lock
+  wait_for_apt_lock /var/lib/apt/lists/lock
+}
+
+repair_apt_state() {
+  log "Checking dpkg/apt state..."
+  sudo "${APT_ENV[@]}" dpkg --configure -a || true
+  sudo "${APT_ENV[@]}" apt-get "${APT_DPKG_OPTIONS[@]}" -f install -y || true
+}
+
+run_with_retry() {
+  local attempt
+  local exit_code
+
+  for ((attempt = 1; attempt <= APT_RETRY_COUNT; attempt++)); do
+    if "$@"; then
+      return 0
+    else
+      exit_code=$?
+    fi
+
+    if (( attempt == APT_RETRY_COUNT )); then
+      log "Command failed after $attempt attempts: $*"
+      return "$exit_code"
+    fi
+
+    log "Command failed (attempt $attempt/$APT_RETRY_COUNT): $*"
+    repair_apt_state
+    wait_for_apt_locks
+    sleep "$APT_RETRY_DELAY_SECONDS"
+  done
+}
+
+log "Preparing apt/dpkg..."
+wait_for_apt_locks
+repair_apt_state
+
+log "Installing OpenSSH server and curl..."
+run_with_retry sudo "${APT_ENV[@]}" apt-get update
+run_with_retry sudo "${APT_ENV[@]}" apt-get "${APT_DPKG_OPTIONS[@]}" install -y openssh-server curl
+
+log "Enabling SSH..."
 sudo systemctl enable --now ssh
 
-echo "Adding SSH keys from GitHub user: $GITHUB_USER"
+log "Adding SSH keys from GitHub user: $GITHUB_USER"
 install -d -m 700 "$HOME/.ssh"
 
 tmp_keys="$(mktemp)"
@@ -37,17 +105,17 @@ while IFS= read -r key; do
   fi
 done < "$tmp_keys"
 
-echo "Applying SSH hardening drop-in..."
+log "Applying SSH hardening drop-in..."
 sudo install -d -m 755 "$SSHD_DROPIN_DIR"
 printf '%s\n' \
   'PasswordAuthentication no' \
   'PermitRootLogin prohibit-password' \
   | sudo tee "$SSH_HARDENING_FILE" > /dev/null
 
-echo "Validating SSH configuration..."
+log "Validating SSH configuration..."
 sudo sshd -t
 
-echo "Restarting SSH..."
+log "Restarting SSH..."
 sudo systemctl restart ssh
 
 echo
