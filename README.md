@@ -93,6 +93,22 @@ If you already have your own WireGuard server in the cloud and only need to join
 sudo apt-get update && sudo apt-get install -y curl && curl -fsSL https://raw.githubusercontent.com/DmKalkat/bootstrap-ubuntu/main/fresh_u.sh | bash
 ```
 
+Call with IP only:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DmKalkat/bootstrap-ubuntu/main/fresh_u.sh | bash -s -- 101
+```
+
+This uses `10.216.0.101/32` and generates a new client key automatically.
+
+Call with IP and private key:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DmKalkat/bootstrap-ubuntu/main/fresh_u.sh | bash -s -- 101 YOUR_PRIVATE_KEY
+```
+
+This uses `10.216.0.101/32` and reuses the provided private key.
+
 Defaults in this join script:
 - `WG_PRIVATE_KEY_FILE=/etc/wireguard/bootstrap-private.key`
 - `WG_IP_LAST=100`
