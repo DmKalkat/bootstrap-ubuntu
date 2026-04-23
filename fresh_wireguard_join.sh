@@ -97,8 +97,11 @@ show_status() {
   echo "Address: ${WG_ADDRESS}"
   echo "Endpoint: ${WG_ENDPOINT}"
   echo "PublicKey: ${WG_PUBLIC_KEY}"
-  echo "Send to admin to add your new client env:"
+  echo
+  echo "----- COPY THIS TO ADMIN -----"
   echo "sudo wg set wg0 peer ${WG_PUBLIC_KEY} allowed-ips ${WG_ADDRESS}"
+  echo "------------------------------"
+  echo
   sudo wg show "${WG_INTERFACE}" || true
   echo "=================================="
 }
